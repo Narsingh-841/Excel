@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload & Process</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+	<style>
+	       .progress {
+	           display: none;
+	       }
+		   body {
+		       background-color: #d3d3d3;
+		       background-image: url('https://raw.githubusercontent.com/Narsingh-841/images/main/3.png');
+		       background-size: cover;
+			   background-position: center;
+		       background-repeat: no-repeat;
+		       background-attachment: fixed;
+		   }
+		
+	       .container {
+	           margin-top: 100px;
+	           background-color: rgba(0, 0, 0, 0.6); /* Slightly transparent background for better readability */
+	           padding: 20px;
+	           border-radius: 8px;
+	           box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+	       }
+	       .btn-adjust {
+	           margin-top: 30px;
+	       }
+	       .note {
+	           font-size: 0.9rem;
+	           color: #6c757d;
+	           margin-top: 10px;
+	       }
+		   .note{
+			color: #ffff;
+		   }
+		   .title{
+			color: #ffff;
+		   }
+		   .heading{
+			color: #ffff;
+		   }
+		   #message {
+		                  font-size: 0.85rem; /* Smaller font size for notification */
+		                  max-width: 300px; /* Decreased width for notification */
+		                  margin: 0 auto; /* Center align notification */
+		              }
+	   </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-4 heading">MYOB To Xero FA2</h1>
+
+        <!-- Upload Form -->
+        <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data ">
+            <div class="row align-items-start mb-3">
+                <div class="col-md-8">
+                    <label for="file" class="form-label title">Select XLSX File:</label>
+                    <input type="file" id="file" name="files" accept=".xlsx" class="form-control" required multiple>
+                    <p class="note">Note: Ensure column names match the correct column data before uploading.</p>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-secondary  w-100 btn-adjust">Process File</button>
+                </div>
+            </div>
+        </form>
+
+        <!-- Progress Bar -->
+        <div class="progress mt-2">
+            <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 40%"></div>
+        </div>
+
+        <!-- Notification Area -->
+        <div id="message" class="alert mt-3" style="display: none;"></div>
+
+        <!-- Download Button -->
+        <div id="downloadSection" class="mt-2" style="display: none;">
+            <a id="downloadLink" href="#" class="btn btn-success w-50" download>Download Processed File</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            // Clear previous messages
+            const messageDiv = document.getElementById('message');
+            const downloadSection = document.getElementById('downloadSection');
+            messageDiv.style.display = 'none';
+            downloadSection.style.display = 'none';
+
+            // Show progress bar
+            const progress = document.querySelector('.progress');
+            progress.style.display = 'block';
+
+            // Prepare FormData
+            const formData = new FormData(this);
+
+            // Send POST request
+            fetch('/upload', {
+                method: 'POST',
+                body: formData,
+            })
+                .then((response) => response.json())  // Get JSON response
+                .then((data) => {
+                    progress.style.display = 'none';
+                    messageDiv.style.display = 'block';
+                    messageDiv.className = 'alert alert-success';
+                    messageDiv.textContent = 'File processed successfully!';
+
+                    // Show download link
+                    const downloadLink = document.getElementById('downloadLink');
+                    downloadLink.href = `/download?file=${data.fileName}`; // Backend should provide processed file's name
+                    downloadSection.style.display = 'block';
+					// Clear the file input, hide the download section, and clear the notification after downloading the file
+					   downloadLink.addEventListener('click', function () {
+					       // Clear file input
+					       document.getElementById('file').value = '';
+					       
+					       // Hide download section
+					       downloadSection.style.display = 'none';
+					       
+					       // Clear notification
+					       messageDiv.style.display = 'none';
+					   });
+                })
+                .catch((error) => {
+                    progress.style.display = 'none';
+                    messageDiv.style.display = 'block';
+                    messageDiv.className = 'alert alert-danger';
+                    messageDiv.textContent = error.message || 'An error occurred while processing the file.';
+                });
+        });
+
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
